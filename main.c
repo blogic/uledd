@@ -148,7 +148,8 @@ led_add(const char *path, int brightness, int original, int blink, int fade, int
 		led->state = LED_BLINK_ON;
 	else if (fade && (led->original != led->brightness))
 		led->state = LED_FADE_IN;
-
+	else
+		led->state = LED_SET;
 	uloop_timeout_cancel(&led->timer);
 	led->timer.cb = led_timer_cb;
 
