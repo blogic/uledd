@@ -6,8 +6,15 @@ ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
 
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
+FIND_PATH(ubox_include_dir NAMES libubox/usock.h)
+FIND_PATH(ubus_include_dir NAMES libubus.h)
+INCLUDE_DIRECTORIES(${ubox_include_dir} ${ubus_include_dir})
+
+FIND_LIBRARY(ubox NAMES ubox)
+FIND_LIBRARY(ubus NAMES ubus)
+
 SET(SOURCES main.c)
-SET(LIBS ubox ubus)
+SET(LIBS ${ubus} ${ubox})
 
 ADD_EXECUTABLE(uledd ${SOURCES})
 TARGET_LINK_LIBRARIES(uledd ${LIBS})
