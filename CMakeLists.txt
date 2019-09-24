@@ -6,6 +6,7 @@ INCLUDE(GNUInstallDirs)
 ADD_DEFINITIONS(-Os -ggdb -Wextra -Wall -Werror --std=gnu99)
 ADD_DEFINITIONS(-Wno-unused-parameter -Wmissing-declarations)
 
+SET(CMAKE_C_FLAGS_DEBUG -DULEDD_DEBUG)
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
 FIND_PATH(ubox_include_dir NAMES libubox/usock.h)
