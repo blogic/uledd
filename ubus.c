@@ -6,8 +6,9 @@
 
 #include <libubus.h>
 
-#include "ubus.h"
 #include "led.h"
+#include "log.h"
+#include "ubus.h"
 
 static struct ubus_auto_conn conn;
 
@@ -95,7 +96,7 @@ ubus_connect_handler(struct ubus_context *ctx)
 
 	ret = ubus_add_object(ctx, &led_object);
 	if (ret)
-		fprintf(stderr, "Failed to add object: %s\n", ubus_strerror(ret));
+		ERROR("Failed to add object: %s\n", ubus_strerror(ret));
 }
 
 void

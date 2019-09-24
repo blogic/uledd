@@ -13,6 +13,7 @@
 #include <libubox/uloop.h>
 #include <libubox/utils.h>
 
+#include "log.h"
 #include "led.h"
 
 static struct avl_tree led_tree = AVL_TREE_INIT(led_tree, avl_strcmp, false, NULL);
@@ -46,7 +47,7 @@ led_set(struct led *led, int brightness)
 	char path[256];
 
 	led->current = brightness;
-	fprintf(stderr, "set %s->%d\n", led->path, brightness);
+	DEBUG(2, "set %s->%d\n", led->path, brightness);
 
 	snprintf(path, sizeof(path), "/sys/class/leds/%s/brightness", led->path);
 	fp = fopen(path, "w");
