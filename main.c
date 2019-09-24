@@ -196,8 +196,9 @@ set_colour(struct ubus_context *ctx, struct ubus_object *obj,
 		    struct ubus_request_data *req, const char *method,
 		    struct blob_attr *msg)
 {
+	size_t rem;
 	struct blob_attr *tb[__COLOUR_MAX], *cur;
-	int rem, blink = 0, fade = 0, on = 0, off = 0;
+	int blink = 0, fade = 0, on = 0, off = 0;
 
 	blobmsg_parse(colour_policy, __COLOUR_MAX, tb, blob_data(msg), blob_len(msg));
 	if (!tb[COLOUR_LEDS])
