@@ -3,8 +3,11 @@ cmake_minimum_required(VERSION 2.6)
 PROJECT(uleddd C)
 INCLUDE(GNUInstallDirs)
 
+SET(ULEDD_VERSION 1.0.0)
+
 ADD_DEFINITIONS(-Os -ggdb -Wextra -Wall -Werror --std=gnu99)
 ADD_DEFINITIONS(-Wno-unused-parameter -Wmissing-declarations)
+ADD_DEFINITIONS(-DULEDD_VERSION="${ULEDD_VERSION}")
 
 SET(CMAKE_C_FLAGS_DEBUG -DULEDD_DEBUG)
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")

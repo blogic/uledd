@@ -59,6 +59,8 @@ int main(int argc, char **argv)
 	}
 
 	ulog_open(ulog_channels, LOG_DAEMON, "uledd");
+	LOG("v%s started.\n", ULEDD_VERSION);
+
 	uloop_init();
 	ubus_init();
 	uloop_run();
