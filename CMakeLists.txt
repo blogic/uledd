@@ -15,7 +15,7 @@ INCLUDE_DIRECTORIES(${ubox_include_dir} ${ubus_include_dir})
 FIND_LIBRARY(ubox NAMES ubox)
 FIND_LIBRARY(ubus NAMES ubus)
 
-SET(SOURCES main.c led.c)
+SET(SOURCES main.c led.c ubus.c)
 SET(LIBS ${ubus} ${ubox})
 
 ADD_EXECUTABLE(uledd ${SOURCES})
