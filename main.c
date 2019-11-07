@@ -10,6 +10,7 @@
 
 #include <libubox/uloop.h>
 
+#include "led.h"
 #include "log.h"
 #include "ubus.h"
 
@@ -69,8 +70,12 @@ int main(int argc, char **argv)
 
 	uloop_init();
 	ubus_init(ubus_socket);
+	led_init();
+
 	uloop_run();
+
 	uloop_done();
+	led_done();
 
 	return 0;
 }

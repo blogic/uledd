@@ -6,4 +6,6 @@
 
 #pragma once
 
+void led_init();
+void led_done();
 void led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);
