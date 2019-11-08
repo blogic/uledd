@@ -2,7 +2,7 @@
  * Copyright (C) 2013 Felix Fietkau <nbd@openwrt.org>
  * Copyright (C) 2013 John Crispin <blogic@openwrt.org>
  *
- * SPDX-License-Identifier: LGPL-2.1
+ * SPDX-License-Identifier: LGPL-2.1-only
  */
 
 #pragma once

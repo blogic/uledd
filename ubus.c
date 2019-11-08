@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2017 John Crispin <john@phrozen.org>
  *
- * SPDX-License-Identifier: LGPL-2.1
+ * SPDX-License-Identifier: LGPL-2.1-only
  */
 
 #include <libubus.h>
