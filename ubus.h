@@ -6,4 +6,4 @@
 
 #pragma once
 
-void ubus_init(void);
+void ubus_init(const char *socket_path);

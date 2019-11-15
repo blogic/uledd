@@ -17,6 +17,8 @@
 unsigned int debug;
 #endif
 
+static char *ubus_socket = NULL;
+
 static int
 usage(const char *prog)
 {
@@ -25,6 +27,7 @@ usage(const char *prog)
 #ifdef ULEDD_DEBUG
 		"	-d <level>	Enable debug messages\n"
 #endif
+		"	-s <path>	Path to ubus socket\n"
 		"	-S		Print messages to stdout\n"
 		"\n", prog);
 	return 1;
@@ -43,13 +46,16 @@ int main(int argc, char **argv)
 	}
 #endif
 
-	while ((ch = getopt(argc, argv, "d:S")) != -1) {
+	while ((ch = getopt(argc, argv, "d:s:S")) != -1) {
 		switch (ch) {
 #ifdef ULEDD_DEBUG
 		case 'd':
 			debug = atoi(optarg);
 			break;
 #endif
+		case 's':
+			ubus_socket = optarg;
+			break;
 		case 'S':
 			ulog_channels = ULOG_STDIO;
 			break;
@@ -62,7 +68,7 @@ int main(int argc, char **argv)
 	LOG("v%s started.\n", ULEDD_VERSION);
 
 	uloop_init();
-	ubus_init();
+	ubus_init(ubus_socket);
 	uloop_run();
 	uloop_done();
 
