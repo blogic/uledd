@@ -6,4 +6,4 @@
 
 #pragma once
 
-void ubus_init(void);
+void led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);

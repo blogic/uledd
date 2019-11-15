@@ -2,12 +2,25 @@ cmake_minimum_required(VERSION 2.6)
 
 PROJECT(uleddd C)
 INCLUDE(GNUInstallDirs)
-ADD_DEFINITIONS(-Os -ggdb -Wall -Werror --std=gnu99 -Wmissing-declarations)
 
+SET(ULEDD_VERSION 1.0.0)
+
+ADD_DEFINITIONS(-Os -ggdb -Wextra -Wall -Werror --std=gnu99)
+ADD_DEFINITIONS(-Wno-unused-parameter -Wmissing-declarations)
+ADD_DEFINITIONS(-DULEDD_VERSION="${ULEDD_VERSION}")
+
+SET(CMAKE_C_FLAGS_DEBUG -DULEDD_DEBUG)
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 
-SET(SOURCES main.c)
-SET(LIBS ubox ubus)
+FIND_PATH(ubox_include_dir NAMES libubox/usock.h)
+FIND_PATH(ubus_include_dir NAMES libubus.h)
+INCLUDE_DIRECTORIES(${ubox_include_dir} ${ubus_include_dir})
+
+FIND_LIBRARY(ubox NAMES ubox)
+FIND_LIBRARY(ubus NAMES ubus)
+
+SET(SOURCES main.c led.c ubus.c)
+SET(LIBS ${ubus} ${ubox})
 
 ADD_EXECUTABLE(uledd ${SOURCES})
 TARGET_LINK_LIBRARIES(uledd ${LIBS})
