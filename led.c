@@ -43,18 +43,24 @@ struct led {
 static void
 led_set(struct led *led, int brightness)
 {
+	int r;
 	FILE *fp;
 	char path[256];
 
-	led->current = brightness;
-	DEBUG(2, "set %s->%d\n", led->path, brightness);
+	DEBUG(3, "set %s to %d\n", led->path, brightness);
 
 	snprintf(path, sizeof(path), "/sys/class/leds/%s/brightness", led->path);
 	fp = fopen(path, "w");
 	if (!fp)
 		return;
-	fprintf(fp, "%d", brightness);
+
+	r = fprintf(fp, "%d", brightness);
 	fclose(fp);
+
+	if (r < 0)
+		return;
+
+	led->current = brightness;
 }
 
 static int
