@@ -12,7 +12,7 @@
 #ifdef ULEDD_DEBUG
 #define DEBUG(level, fmt, ...) do { \
 	if (debug >= level) { \
-		ulog(LOG_DEBUG, fmt, ## __VA_ARGS__); \
+		ulog(LOG_DEBUG, "%s: " fmt, __func__, ## __VA_ARGS__); \
 	} } while (0)
 #else
 #define DEBUG(level, fmt, ...)

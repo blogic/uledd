@@ -15,6 +15,9 @@
 
 #include "log.h"
 #include "led.h"
+#include "timer.h"
+
+#define LED_TIMER_TICK_INTERVAL 10
 
 static struct avl_tree led_tree = AVL_TREE_INIT(led_tree, avl_strcmp, false, NULL);
 
@@ -32,29 +35,36 @@ struct led {
 	int brightness;
 	int original;
 	int current;
+	int delta;
 	int fade;
 	int blink;
 	int on;
 	int off;
-	struct uloop_timeout timer;
+	struct led_timer timer;
 	char *path;
 };
 
 static void
 led_set(struct led *led, int brightness)
 {
+	int r;
 	FILE *fp;
 	char path[256];
 
-	led->current = brightness;
-	DEBUG(2, "set %s->%d\n", led->path, brightness);
+	DEBUG(3, "set %s to %d\n", led->path, brightness);
 
 	snprintf(path, sizeof(path), "/sys/class/leds/%s/brightness", led->path);
 	fp = fopen(path, "w");
 	if (!fp)
 		return;
-	fprintf(fp, "%d", brightness);
+
+	r = fprintf(fp, "%d", brightness);
 	fclose(fp);
+
+	if (r < 0)
+		return;
+
+	led->current = brightness;
 }
 
 static int
@@ -63,23 +73,95 @@ led_get(struct led *led)
 	return 0;
 }
 
-static void
-led_fade(struct led *led, int brightness, int fade, int next)
+#ifdef ULEDD_DEBUG
+static char*
+led_state_str(enum led_state state)
 {
-	int delta = 1;
+	char *p = NULL;
+	static char buf[16] = {0};
 
-	if (led->current > brightness)
-		delta = -1;
+	struct led_state_str {
+		enum led_state state;
+		const char* str;
+	};
 
-	led_set(led, led->current + delta);
-	if (led->current == brightness)
-		led->state = next;
+	static struct led_state_str led_state_tbl[] = {
+		{ LED_SET, "LED_SET" },
+		{ LED_FADE_IN, "LED_FADE_IN" },
+		{ LED_FADE_OUT, "LED_FADE_OUT" },
+		{ LED_BLINK_ON, "LED_BLINK_ON" },
+		{ LED_BLINK_OFF, "LED_BLINK_OFF" },
+		{ 0, NULL },
+	};
 
-	uloop_timeout_set(&led->timer, fade / abs(led->brightness - led->original));
+	p = (char *) led_state_tbl[state].str;
+	snprintf(buf, sizeof(buf), "%s", p);
+
+	return buf;
+}
+#endif
+
+static void
+led_state_set(struct led *led, enum led_state state)
+{
+	led->state = state;
+	DEBUG(3, "%s to %s\n", led->path, led_state_str(state));
 }
 
 static void
-led_timer_cb(struct uloop_timeout *t)
+led_fade_out(struct led *led)
+{
+	int to = led->brightness;
+	int from = led->original;
+	int value = led->current;
+
+	if (value == 0)
+		value = from;
+	else
+		value -= led->delta;
+
+	if (value < 0)
+		value = to;
+
+	led_set(led, value);
+
+	if (led->current == to) {
+		led->original = to;
+		led->brightness = from;
+		led_state_set(led, led->on ? LED_FADE_IN : LED_SET);
+	}
+
+	led_timer_set(&led->timer, LED_TIMER_TICK_INTERVAL);
+}
+
+static void
+led_fade_in(struct led *led)
+{
+	int to = led->brightness;
+	int from = led->original;
+	int value = led->current;
+
+	if (value < from)
+		value = from;
+	else
+		value += led->delta;
+
+	if (value > to)
+		value = to;
+
+	led_set(led, value);
+
+	if (led->current == to) {
+		led->original = to;
+		led->brightness = from;
+		led_state_set(led, led->off ? LED_FADE_OUT : LED_SET);
+	}
+
+	led_timer_set(&led->timer, LED_TIMER_TICK_INTERVAL);
+}
+
+static void
+led_timer_cb(struct led_timer *t)
 {
 	struct led *led = container_of(t, struct led, timer);
 	int brightness, timeout;
@@ -98,19 +180,25 @@ led_timer_cb(struct uloop_timeout *t)
 		break;
 
 	case LED_FADE_IN:
-		led_fade(led, led->brightness, led->on, led->off ? LED_FADE_OUT : LED_SET);
-		return;
+		return led_fade_in(led);
 
 	case LED_FADE_OUT:
-		led_fade(led, led->original, led->off, led->on ? LED_FADE_IN : LED_SET);
-		return;
+		return led_fade_out(led);
 
 	default:
 		return;
 	}
 
 	led_set(led, brightness);
-	uloop_timeout_set(t, timeout);
+	led_timer_set(t, timeout);
+}
+
+static int
+compute_delta(int duration, int range)
+{
+	int num_ticks = duration / LED_TIMER_TICK_INTERVAL;
+	int delta = range / num_ticks;
+	return delta > 0 ? delta : 1;
 }
 
 void
@@ -143,11 +231,14 @@ led_add(const char *path, int brightness, int original, int blink, int fade, int
 
 	if (blink && on && off)
 		led->state = LED_BLINK_ON;
-	else if (fade && (led->original != led->brightness))
+	else if (fade && (led->brightness > led->original))
 		led->state = LED_FADE_IN;
+	else if (fade && (led->brightness < led->original))
+		led->state = LED_FADE_OUT;
 	else
 		led->state = LED_SET;
-	uloop_timeout_cancel(&led->timer);
+
+	led_timer_cancel(&led->timer);
 	led->timer.cb = led_timer_cb;
 
 	switch (led->state) {
@@ -155,8 +246,14 @@ led_add(const char *path, int brightness, int original, int blink, int fade, int
 		led_set(led, led->brightness);
 		return;
 
+	case LED_FADE_OUT:
+		timeout = LED_TIMER_TICK_INTERVAL;
+		led->delta = compute_delta(led->off, led->original);
+		break;
+
 	case LED_FADE_IN:
-		timeout = led->on / abs(led->brightness - led->original);
+		timeout = LED_TIMER_TICK_INTERVAL;
+		led->delta = compute_delta(led->on, led->brightness);
 		break;
 
 	case LED_BLINK_ON:
@@ -168,5 +265,17 @@ led_add(const char *path, int brightness, int original, int blink, int fade, int
 		return;
 	}
 
-	uloop_timeout_set(&led->timer, timeout);
+	led_timer_set(&led->timer, timeout);
+}
+
+void
+led_init()
+{
+	led_timers_init(LED_TIMER_TICK_INTERVAL);
+}
+
+void
+led_done()
+{
+	led_timers_done();
 }

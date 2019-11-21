@@ -100,8 +100,9 @@ ubus_connect_handler(struct ubus_context *ctx)
 }
 
 void
-ubus_init()
+ubus_init(const char *socket_path)
 {
+	conn.path = socket_path;
 	conn.cb = ubus_connect_handler;
 	ubus_auto_connect(&conn);
 }
