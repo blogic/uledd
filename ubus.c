@@ -35,6 +35,7 @@ set_colour(struct ubus_context *ctx, struct ubus_object *obj,
 		    struct blob_attr *msg)
 {
 	size_t rem;
+	struct led *led = NULL;
 	struct blob_attr *tb[__COLOUR_MAX], *cur;
 	int blink = 0, fade = 0, on = 0, off = 0;
 
@@ -61,15 +62,21 @@ set_colour(struct ubus_context *ctx, struct ubus_object *obj,
 		};
 		struct blob_attr *brightness[2];
 
-		if (blobmsg_type(cur) == BLOBMSG_TYPE_INT32)
-			led_add(blobmsg_name(cur), blobmsg_get_u32(cur), -1, blink, fade, on, off);
-		else if (blobmsg_type(cur) == BLOBMSG_TYPE_ARRAY) {
+		if (blobmsg_type(cur) == BLOBMSG_TYPE_INT32) {
+			led = led_add(blobmsg_name(cur), blobmsg_get_u32(cur), -1, blink, fade, on, off);
+			if (!led)
+				return UBUS_STATUS_UNKNOWN_ERROR;
+			led_run(led);
+		} else if (blobmsg_type(cur) == BLOBMSG_TYPE_ARRAY) {
 			blobmsg_parse_array(brightness_policy, 2, brightness, blobmsg_data(cur),
 					    blobmsg_data_len(cur));
 			if (!brightness[0] || !brightness[1])
 				continue;
-			led_add(blobmsg_name(cur), blobmsg_get_u32(brightness[1]), blobmsg_get_u32(brightness[0]),
+			led = led_add(blobmsg_name(cur), blobmsg_get_u32(brightness[1]), blobmsg_get_u32(brightness[0]),
 				blink, fade, on, off);
+			if (!led)
+				return UBUS_STATUS_UNKNOWN_ERROR;
+			led_run(led);
 		}
 	}
 	return 0;

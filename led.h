@@ -6,6 +6,10 @@
 
 #pragma once
 
+struct led;
+
 void led_init();
 void led_done();
-void led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);
+struct led *led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);
+void led_run(struct led *led);
+void led_stop(struct led *led);

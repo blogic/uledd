@@ -201,18 +201,17 @@ compute_delta(int duration, int range)
 	return delta > 0 ? delta : 1;
 }
 
-void
+struct led*
 led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off)
 {
 	struct led *led;
 	char *_path;
-	int timeout;
 
 	led = avl_find_element(&led_tree, path, led, avl);
 	if (!led) {
 		led = calloc_a(sizeof(*led), &_path, strlen(path) + 1);
 		if (!led)
-			return;
+			return NULL;
 		led->path = strcpy(_path, path);
 		led->current = led_get(led);
 		led->avl.key = led->path;
@@ -241,6 +240,17 @@ led_add(const char *path, int brightness, int original, int blink, int fade, int
 	led_timer_cancel(&led->timer);
 	led->timer.cb = led_timer_cb;
 
+	return led;
+}
+
+void
+led_run(struct led *led)
+{
+	int timeout;
+
+	if (!led)
+		return;
+
 	switch (led->state) {
 	case LED_SET:
 		led_set(led, led->brightness);
@@ -266,6 +276,15 @@ led_add(const char *path, int brightness, int original, int blink, int fade, int
 	}
 
 	led_timer_set(&led->timer, timeout);
+}
+
+void
+led_stop(struct led *led)
+{
+	if (!led)
+		return;
+
+	led_timer_cancel(&led->timer);
 }
 
 void
