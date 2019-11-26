@@ -22,11 +22,13 @@ INCLUDE_DIRECTORIES(${ubox_include_dir} ${ubus_include_dir})
 
 FIND_LIBRARY(ubox NAMES ubox)
 FIND_LIBRARY(ubus NAMES ubus)
+FIND_LIBRARY(blobmsg_json NAMES blobmsg_json)
+FIND_LIBRARY(json NAMES json-c)
 
 SET(SOURCES main.c)
 
-ADD_LIBRARY(uledd-lib STATIC led.c ubus.c timer.c)
-TARGET_LINK_LIBRARIES(uledd-lib ${ubus} ${ubox})
+ADD_LIBRARY(uledd-lib STATIC blob_led.c led.c ubus.c scene.c scene_json.c timer.c)
+TARGET_LINK_LIBRARIES(uledd-lib ${blobmsg_json} ${json} ${ubus} ${ubox})
 
 IF(UNIT_TESTING)
   ENABLE_TESTING()

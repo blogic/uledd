@@ -7,9 +7,10 @@
 #pragma once
 
 struct led;
+struct blob_led;
 
 void led_init(int tick_interval);
 void led_done();
-struct led *led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);
+struct led *led_add(struct blob_led *b);
 void led_run(struct led *led);
 void led_stop(struct led *led);
