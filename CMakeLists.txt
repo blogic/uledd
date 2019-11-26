@@ -19,11 +19,13 @@ INCLUDE_DIRECTORIES(${ubox_include_dir} ${ubus_include_dir})
 FIND_LIBRARY(ubox NAMES ubox)
 FIND_LIBRARY(ubus NAMES ubus)
 
-SET(SOURCES main.c led.c ubus.c timer.c)
-SET(LIBS ${ubus} ${ubox})
+SET(SOURCES main.c)
+
+ADD_LIBRARY(uledd-lib STATIC led.c ubus.c timer.c)
+TARGET_LINK_LIBRARIES(uledd-lib ${ubus} ${ubox})
 
 ADD_EXECUTABLE(uledd ${SOURCES})
-TARGET_LINK_LIBRARIES(uledd ${LIBS})
+TARGET_LINK_LIBRARIES(uledd uledd-lib)
 INSTALL(TARGETS uledd
 	RUNTIME DESTINATION ${CMAKE_INSTALL_SBINDIR}
 )
