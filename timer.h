@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdbool.h>
+
+#include <libubox/list.h>
+
 struct led_timer;
 typedef void (*led_timer_handler)(struct led_timer *t);
 
