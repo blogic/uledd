@@ -17,6 +17,11 @@
 #include "led.h"
 #include "timer.h"
 
+#ifdef UNIT_TESTING
+#define LED_SYSFS_PATH "/tmp/%s-brightness"
+#else
+#define LED_SYSFS_PATH "/sys/class/leds/%s/brightness"
+#endif
 
 static int timer_tick_interval;
 static struct avl_tree led_tree = AVL_TREE_INIT(led_tree, avl_strcmp, false, NULL);
@@ -51,9 +56,7 @@ led_set(struct led *led, int brightness)
 	FILE *fp;
 	char path[256];
 
-	DEBUG(3, "set %s to %d\n", led->path, brightness);
-
-	snprintf(path, sizeof(path), "/sys/class/leds/%s/brightness", led->path);
+	snprintf(path, sizeof(path), LED_SYSFS_PATH, led->path);
 	fp = fopen(path, "w");
 	if (!fp)
 		return;
@@ -64,6 +67,7 @@ led_set(struct led *led, int brightness)
 	if (r < 0)
 		return;
 
+	DEBUG(3, "set %s to %d\n", led->path, brightness);
 	led->current = brightness;
 }
 
