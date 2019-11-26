@@ -276,6 +276,9 @@ led_run(struct led *led)
 	}
 
 	led_timer_set(&led->timer, timeout);
+
+	DEBUG(3, "adding %s delta=%d timeout=%d brightness=%d original=%d blink=%d fade=%d on=%d off=%d\n",
+	      led->path, led->delta, timeout, led->brightness, led->original, led->blink, led->fade, led->on, led->off);
 }
 
 void
