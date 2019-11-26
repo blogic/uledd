@@ -1,0 +1,9 @@
+{
+  "name": "wps",
+  "priority": 3,
+  "timeout": 35000,
+  "leds": { "ap:green:status": [0, 255], "ap:red:status": [255, 0] },
+  "on": 2000,
+  "off": 2000,
+  "fade": 1
+}
