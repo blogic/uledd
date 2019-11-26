@@ -8,7 +8,7 @@
 
 struct led;
 
-void led_init();
+void led_init(int tick_interval);
 void led_done();
 struct led *led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);
 void led_run(struct led *led);

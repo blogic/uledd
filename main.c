@@ -14,6 +14,8 @@
 #include "log.h"
 #include "ubus.h"
 
+#define LED_TIMER_TICK_INTERVAL 10
+
 #ifdef ULEDD_DEBUG
 unsigned int debug;
 #endif
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
 
 	uloop_init();
 	ubus_init(ubus_socket);
-	led_init();
+	led_init(LED_TIMER_TICK_INTERVAL);
 
 	uloop_run();
 

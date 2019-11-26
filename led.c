@@ -17,8 +17,8 @@
 #include "led.h"
 #include "timer.h"
 
-#define LED_TIMER_TICK_INTERVAL 10
 
+static int timer_tick_interval;
 static struct avl_tree led_tree = AVL_TREE_INIT(led_tree, avl_strcmp, false, NULL);
 
 enum led_state {
@@ -131,7 +131,7 @@ led_fade_out(struct led *led)
 		led_state_set(led, led->on ? LED_FADE_IN : LED_SET);
 	}
 
-	led_timer_set(&led->timer, LED_TIMER_TICK_INTERVAL);
+	led_timer_set(&led->timer, timer_tick_interval);
 }
 
 static void
@@ -157,7 +157,7 @@ led_fade_in(struct led *led)
 		led_state_set(led, led->off ? LED_FADE_OUT : LED_SET);
 	}
 
-	led_timer_set(&led->timer, LED_TIMER_TICK_INTERVAL);
+	led_timer_set(&led->timer, timer_tick_interval);
 }
 
 static void
@@ -196,7 +196,7 @@ led_timer_cb(struct led_timer *t)
 static int
 compute_delta(int duration, int range)
 {
-	int num_ticks = duration / LED_TIMER_TICK_INTERVAL;
+	int num_ticks = duration / timer_tick_interval;
 	int delta = range / num_ticks;
 	return delta > 0 ? delta : 1;
 }
@@ -257,12 +257,12 @@ led_run(struct led *led)
 		return;
 
 	case LED_FADE_OUT:
-		timeout = LED_TIMER_TICK_INTERVAL;
+		timeout = timer_tick_interval;
 		led->delta = compute_delta(led->off, led->original);
 		break;
 
 	case LED_FADE_IN:
-		timeout = LED_TIMER_TICK_INTERVAL;
+		timeout = timer_tick_interval;
 		led->delta = compute_delta(led->on, led->brightness);
 		break;
 
@@ -288,9 +288,10 @@ led_stop(struct led *led)
 }
 
 void
-led_init()
+led_init(int tick_interval)
 {
-	led_timers_init(LED_TIMER_TICK_INTERVAL);
+	timer_tick_interval = tick_interval;
+	led_timers_init(tick_interval);
 }
 
 void
