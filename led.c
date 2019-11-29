@@ -10,6 +10,7 @@
 
 #include <libubox/avl.h>
 #include <libubox/avl-cmp.h>
+#include <libubox/blobmsg.h>
 #include <libubox/uloop.h>
 #include <libubox/utils.h>
 
@@ -72,7 +73,6 @@ led_get(struct led *led)
 	return 0;
 }
 
-#ifdef ULEDD_DEBUG
 static const char*
 led_state_str(enum led_state state)
 {
@@ -94,7 +94,6 @@ led_state_str(enum led_state state)
 
 	return led_state_tbl[state].str;
 }
-#endif
 
 static void
 led_state_set(struct led *led, enum led_state state)
@@ -286,6 +285,30 @@ led_stop(struct led *led)
 		return;
 
 	led_timer_cancel(&led->timer);
+}
+
+void
+led_state_blobmsg(struct blob_buf *b, struct led *o)
+{
+	void *t = blobmsg_open_table(b, "");
+
+	blobmsg_add_string(b, "name", o->b->path);
+	blobmsg_add_string(b, "state", led_state_str(o->state));
+	blobmsg_add_u32(b, "current", o->current);
+
+	blobmsg_close_table(b, t);
+}
+
+void
+leds_state_blobmsg(struct blob_buf *b)
+{
+	void *arr;
+	struct led *led;
+
+	arr = blobmsg_open_array(b, "leds");
+	avl_for_each_element(&led_tree, led, avl)
+		led_state_blobmsg(b, led);
+	blobmsg_close_table(b, arr);
 }
 
 void

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 
 #include <libubox/uloop.h>
+#include <libubox/blobmsg.h>
+#include <libubox/blobmsg_json.h>
 
 #include "blob_led.h"
 #include "led.h"
@@ -12,10 +14,24 @@
 unsigned int debug = 3;
 static struct uloop_timeout exit_timer;
 
-struct led *red = NULL;
-struct led *green = NULL;
-struct blob_led *blob_red;
-struct blob_led *blob_green;
+static struct led *red = NULL;
+static struct led *green = NULL;
+static struct blob_led *blob_red;
+static struct blob_led *blob_green;
+static struct blob_buf b = { 0 };
+
+static void
+dump_state_json()
+{
+	char *json;
+
+	blob_buf_init(&b, 0);
+	leds_state_blobmsg(&b);
+	json = blobmsg_format_json_indent(b.head, 1, 0);
+	fprintf(stdout, "%s\n", json);
+	fflush(stdout);
+	free(json);
+}
 
 static void
 test_basic_led()
@@ -45,6 +61,7 @@ main(int argc, char *argv[])
 	led_init(LED_TIMER_TICK_INTERVAL);
 
 	test_basic_led();
+	dump_state_json();
 
 	exit_timer.cb = exit_timer_handler;
 	uloop_timeout_set(&exit_timer, LED_TIMER_TICK_INTERVAL * 15);
