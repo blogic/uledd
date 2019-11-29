@@ -1,5 +1,6 @@
 #include <libubox/avl.h>
 #include <libubox/avl-cmp.h>
+#include <libubox/blobmsg.h>
 
 #include "blob_led.h"
 #include "led.h"
@@ -252,6 +253,42 @@ scene_run(const char *name)
 		return false;
 
 	return run_scene(new);
+}
+
+static void
+dump_scene_leds_blobmsg(struct blob_buf *b, struct scene *s)
+{
+	void *arr;
+	struct scene_led *o;
+
+	arr = blobmsg_open_array(b, "leds");
+	avl_for_each_element(&s->leds, o, avl)
+		led_state_blobmsg(b, led_from_path(o->led->path));
+	blobmsg_close_table(b, arr);
+}
+
+void
+scenes_state_blobmsg(struct blob_buf *b)
+{
+	void *arr;
+	struct scene *s;
+
+	arr = blobmsg_open_array(b, "scenes");
+
+	avl_for_each_element(&scene_tree, s, avl) {
+		void *t = blobmsg_open_table(b, "");
+
+		blobmsg_add_string(b, "name", s->name);
+		blobmsg_add_string(b, "state", state_str(s->state));
+		blobmsg_add_u32(b, "timeout", s->timeout);
+		blobmsg_add_u32(b, "priority", s->priority);
+
+		dump_scene_leds_blobmsg(b, s);
+
+		blobmsg_close_table(b, t);
+	}
+
+	blobmsg_close_table(b, arr);
 }
 
 const char*
