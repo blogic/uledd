@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 PROJECT(uleddd C)
 INCLUDE(GNUInstallDirs)
 
-SET(ULEDD_VERSION 1.0.0)
+SET(ULEDD_VERSION 1.0.1)
 
 ADD_DEFINITIONS(-Os -ggdb -Wextra -Wall -Werror --std=gnu99)
 ADD_DEFINITIONS(-Wno-unused-parameter -Wmissing-declarations)
