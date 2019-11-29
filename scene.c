@@ -123,7 +123,7 @@ stage_scene(struct scene *s)
 	struct scene_led *item;
 
 	avl_for_each_element(&s->leds, item, avl)
-		led_run(led_add(item->led));
+		led_run(led_from_path(item->led->path));
 
 	s->paused_by = NULL;
 	set_scene_state(s, SCENE_RUNNING);
@@ -238,6 +238,7 @@ scene_led_add(struct scene *s, struct blob_led *b)
 	n->led = b;
 	n->avl.key = b->path;
 	avl_insert(&s->leds, &n->avl);
+	led_add(b);
 	DEBUG(3, "%s\n", blob_led_str(n->led));
 }
 
