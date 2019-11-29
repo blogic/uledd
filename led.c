@@ -205,7 +205,7 @@ led_add(struct blob_led *b)
 {
 	struct led *led;
 
-	led = avl_find_element(&led_tree, b->path, led, avl);
+	led = led_from_path(b->path);
 	if (!led) {
 		led = calloc(1, sizeof(*led));
 		if (!led)
@@ -274,6 +274,13 @@ led_run(struct led *led)
 	DEBUG(3, "%s delta=%d timeout=%d brightness=%d original=%d blink=%d fade=%d on=%d off=%d\n",
 	      led->b->path, led->delta, timeout, led->b->brightness, led->b->original, led->b->blink,
 	      led->b->fade, led->b->on, led->b->off);
+}
+
+struct led *
+led_from_path(const char *path)
+{
+	struct led *led;
+	return avl_find_element(&led_tree, path, led, avl);
 }
 
 void
