@@ -12,6 +12,7 @@
 #include "scene.h"
 #include "ubus.h"
 
+static struct blob_buf b = { 0 };
 static struct ubus_auto_conn conn;
 
 enum {
@@ -60,7 +61,21 @@ handle_scene(struct ubus_context *ctx, struct ubus_object *obj,
 	return UBUS_STATUS_OK;
 }
 
+static int
+handle_state(struct ubus_context *ctx, struct ubus_object *obj,
+		    struct ubus_request_data *req, const char *method,
+		    struct blob_attr *msg)
+{
+	blob_buf_init(&b, 0);
+	leds_state_blobmsg(&b);
+	scenes_state_blobmsg(&b);
+	ubus_send_reply(ctx, req, b.head);
+
+	return UBUS_STATUS_OK;
+}
+
 static const struct ubus_method led_methods[] = {
+	UBUS_METHOD_NOARG("state", handle_state),
 	{
 		.name = "set",
 		.handler = set_colour,
