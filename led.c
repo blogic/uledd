@@ -73,12 +73,9 @@ led_get(struct led *led)
 }
 
 #ifdef ULEDD_DEBUG
-static char*
+static const char*
 led_state_str(enum led_state state)
 {
-	char *p = NULL;
-	static char buf[16] = {0};
-
 	struct led_state_str {
 		enum led_state state;
 		const char* str;
@@ -90,13 +87,12 @@ led_state_str(enum led_state state)
 		{ LED_FADE_OUT, "LED_FADE_OUT" },
 		{ LED_BLINK_ON, "LED_BLINK_ON" },
 		{ LED_BLINK_OFF, "LED_BLINK_OFF" },
-		{ 0, NULL },
 	};
 
-	p = (char *) led_state_tbl[state].str;
-	snprintf(buf, sizeof(buf), "%s", p);
+	if (state > sizeof(led_state_tbl))
+		return "unknown";
 
-	return buf;
+	return led_state_tbl[state].str;
 }
 #endif
 
