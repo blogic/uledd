@@ -1,0 +1,9 @@
+{
+  "name": "sms",
+  "priority": 6,
+  "timeout": 1500,
+  "leds": { "ap:orange:sms": [0, 255] },
+  "on": 1000,
+  "off": 1000,
+  "fade": 1
+}

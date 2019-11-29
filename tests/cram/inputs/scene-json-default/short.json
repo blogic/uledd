@@ -1,0 +1,9 @@
+{
+  "name": "short",
+  "priority": 1,
+  "timeout": 1500,
+  "leds": { "ap:purple:short": [0, 255] },
+  "on": 1000,
+  "off": 1000,
+  "fade": 1
+}

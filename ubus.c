@@ -9,9 +9,19 @@
 #include "blob_led.h"
 #include "led.h"
 #include "log.h"
+#include "scene.h"
 #include "ubus.h"
 
 static struct ubus_auto_conn conn;
+
+enum {
+	SCENE_NAME,
+	__SCENE_MAX,
+};
+
+static const struct blobmsg_policy scene_policy[] = {
+	[SCENE_NAME]	= { "name", BLOBMSG_TYPE_STRING },
+};
 
 static void
 led_parse_handler(struct blob_led *b, void *cb_arg)
@@ -31,6 +41,25 @@ set_colour(struct ubus_context *ctx, struct ubus_object *obj,
 	return UBUS_STATUS_OK;
 }
 
+static int
+handle_scene(struct ubus_context *ctx, struct ubus_object *obj,
+		    struct ubus_request_data *req, const char *method,
+		    struct blob_attr *msg)
+{
+	const char *name = NULL;
+	struct blob_attr *tb[__SCENE_MAX];
+
+	blobmsg_parse(scene_policy, __SCENE_MAX, tb, blob_data(msg), blob_len(msg));
+	if (!tb[SCENE_NAME])
+		return UBUS_STATUS_INVALID_ARGUMENT;
+
+	name = blobmsg_get_string(tb[SCENE_NAME]);
+	if (!scene_run(name))
+		return UBUS_STATUS_UNKNOWN_ERROR;
+
+	return UBUS_STATUS_OK;
+}
+
 static const struct ubus_method led_methods[] = {
 	{
 		.name = "set",
@@ -38,6 +67,7 @@ static const struct ubus_method led_methods[] = {
 		.policy = colour_policy,
 		.n_policy = COLOUR_POLICY_LEN,
 	},
+	UBUS_METHOD("scene", handle_scene, scene_policy),
 };
 
 static struct ubus_object_type led_object_type =

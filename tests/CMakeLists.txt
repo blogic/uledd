@@ -3,7 +3,6 @@ ADD_SUBDIRECTORY(cram)
 MACRO(ADD_UNIT_TEST name)
   ADD_EXECUTABLE(${name} ${name}.c)
   TARGET_LINK_LIBRARIES(${name} uledd-lib)
-  # TARGET_LINK_LIBRARIES(${name} ubox blobmsg_json json_script ${json})
   TARGET_INCLUDE_DIRECTORIES(${name} PRIVATE ${PROJECT_SOURCE_DIR})
 ENDMACRO(ADD_UNIT_TEST)
 
