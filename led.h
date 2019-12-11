@@ -6,6 +6,17 @@
 
 #pragma once
 
-void led_init();
+struct led;
+struct blob_led;
+struct blob_buf;
+struct avl_tree;
+
+void led_init(int tick_interval);
 void led_done();
-void led_add(const char *path, int brightness, int original, int blink, int fade, int on, int off);
+struct led *led_add(struct blob_led *b);
+struct led *led_from_path(const char *path);
+void led_run(struct led *led);
+void led_stop(struct led *led);
+
+void leds_state_blobmsg(struct blob_buf *b);
+void led_state_blobmsg(struct blob_buf *b, struct led *o);

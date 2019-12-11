@@ -13,6 +13,11 @@
 #include "led.h"
 #include "log.h"
 #include "ubus.h"
+#include "scene.h"
+#include "scene_json.h"
+
+#define LED_TIMER_TICK_INTERVAL 10
+#define JSON_CONFIG_DIR "/etc/uled.d"
 
 #ifdef ULEDD_DEBUG
 unsigned int debug;
@@ -29,6 +34,7 @@ usage(const char *prog)
 		"	-d <level>	Enable debug messages\n"
 #endif
 		"	-s <path>	Path to ubus socket\n"
+		"	-j <path>	Path to JSON config dir\n"
 		"	-S		Print messages to stdout\n"
 		"\n", prog);
 	return 1;
@@ -37,6 +43,7 @@ usage(const char *prog)
 int main(int argc, char **argv)
 {
 	int ch;
+	const char *json_dir = NULL;
 	int ulog_channels = ULOG_KMSG;
 #ifdef ULEDD_DEBUG
 	char *dbglvl = getenv("DBGLVL");
@@ -47,7 +54,7 @@ int main(int argc, char **argv)
 	}
 #endif
 
-	while ((ch = getopt(argc, argv, "d:s:S")) != -1) {
+	while ((ch = getopt(argc, argv, "d:s:j:S")) != -1) {
 		switch (ch) {
 #ifdef ULEDD_DEBUG
 		case 'd':
@@ -57,6 +64,9 @@ int main(int argc, char **argv)
 		case 's':
 			ubus_socket = optarg;
 			break;
+		case 'j':
+			json_dir = optarg;
+			break;
 		case 'S':
 			ulog_channels = ULOG_STDIO;
 			break;
@@ -65,17 +75,22 @@ int main(int argc, char **argv)
 		}
 	}
 
+	if (!json_dir)
+		json_dir = JSON_CONFIG_DIR;
+
 	ulog_open(ulog_channels, LOG_DAEMON, "uledd");
 	LOG("v%s started.\n", ULEDD_VERSION);
 
 	uloop_init();
 	ubus_init(ubus_socket);
-	led_init();
+	led_init(LED_TIMER_TICK_INTERVAL);
+	scene_json_load(json_dir);
 
 	uloop_run();
 
 	uloop_done();
 	led_done();
+	scene_done();
 
 	return 0;
 }

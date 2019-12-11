@@ -1,0 +1,9 @@
+{
+  "name": "backdoor",
+  "priority": 5,
+  "timeout": 2000,
+  "leds": { "ap:orange:sms": [0, 128] },
+  "on": 500,
+  "off": 500,
+  "fade": 1
+}
