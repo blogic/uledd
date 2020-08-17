@@ -146,9 +146,10 @@ check_scene_priority(struct scene *run)
 				continue;
 
 			if (run->priority < cur->priority) {
-				DEBUG(3, "not running %s (prio=%d) < %s (prio=%d)\n",
+				DEBUG(3, "pausing %s (prio=%d) < %s (prio=%d)\n",
 				      run->name, run->priority, cur->name,
 				      cur->priority);
+				pause_scene(run, cur);
 				return false;
 			}
 
@@ -163,7 +164,7 @@ static bool
 run_scene(struct scene *run)
 {
 	if (!check_scene_priority(run))
-		return false;
+		return true;
 
 	return stage_scene(run);
 }
@@ -175,7 +176,7 @@ resume_paused_scenes(struct scene *paused_by)
 
 	avl_for_each_element(&scene_tree, scene, avl) {
 		if (is_paused(scene) && (scene->paused_by == paused_by))
-			stage_scene(scene);
+			run_scene(scene);
 	}
 }
 
