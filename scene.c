@@ -123,8 +123,10 @@ stage_scene(struct scene *s)
 {
 	struct scene_led *item;
 
-	avl_for_each_element(&s->leds, item, avl)
+	avl_for_each_element(&s->leds, item, avl) {
+		led_add(item->led);
 		led_run(led_from_path(item->led->path));
+	}
 
 	s->paused_by = NULL;
 	set_scene_state(s, SCENE_RUNNING);
