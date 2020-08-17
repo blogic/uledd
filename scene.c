@@ -257,6 +257,20 @@ scene_run(const char *name)
 	return run_scene(new);
 }
 
+bool
+scene_stop(const char *name)
+{
+	struct scene *new;
+
+	new = avl_find_element(&scene_tree, name, new, avl);
+	if (!new)
+		return false;
+
+	stop_scene(new);
+	resume_paused_scenes(new);
+	return true;
+}
+
 static void
 dump_scene_leds_blobmsg(struct blob_buf *b, struct scene *s)
 {

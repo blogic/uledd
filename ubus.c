@@ -17,11 +17,13 @@ static struct ubus_auto_conn conn;
 
 enum {
 	SCENE_NAME,
+	SCENE_START,
 	__SCENE_MAX,
 };
 
 static const struct blobmsg_policy scene_policy[] = {
 	[SCENE_NAME]	= { "name", BLOBMSG_TYPE_STRING },
+	[SCENE_START]	= { "start", BLOBMSG_TYPE_BOOL },
 };
 
 static void
@@ -48,6 +50,7 @@ handle_scene(struct ubus_context *ctx, struct ubus_object *obj,
 		    struct blob_attr *msg)
 {
 	const char *name = NULL;
+	bool start = true;
 	struct blob_attr *tb[__SCENE_MAX];
 
 	blobmsg_parse(scene_policy, __SCENE_MAX, tb, blob_data(msg), blob_len(msg));
@@ -55,7 +58,13 @@ handle_scene(struct ubus_context *ctx, struct ubus_object *obj,
 		return UBUS_STATUS_INVALID_ARGUMENT;
 
 	name = blobmsg_get_string(tb[SCENE_NAME]);
-	if (!scene_run(name))
+
+	if (tb[SCENE_START])
+		start = blobmsg_get_bool(tb[SCENE_START]);
+
+	if (start && (!scene_run(name)))
+		return UBUS_STATUS_UNKNOWN_ERROR;
+	else if ((!start) && (!scene_stop(name)))
 		return UBUS_STATUS_UNKNOWN_ERROR;
 
 	return UBUS_STATUS_OK;
