@@ -88,6 +88,7 @@ test that scene-basic is providing expected results:
   \t\t} (esc)
   \t] (esc)
   }
+  test-scene-json: led_add: ap:purple:short brightness=255 original=0 blink=0 fade=1 on=1000 off=1000
   test-scene-json: led_run: ap:purple:short delta=25 timeout=100 brightness=255 original=0 blink=0 fade=1 on=1000 off=1000
   test-scene-json: set_scene_state: short to SCENE_RUNNING
   test-scene-json: led_set: set ap:purple:short to 25
