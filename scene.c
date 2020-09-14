@@ -104,7 +104,9 @@ stop_scene_leds(struct scene *s)
 static void
 stop_scene(struct scene *s)
 {
-	stop_scene_leds(s);
+	if (is_running(s))
+		stop_scene_leds(s);
+
 	set_scene_state(s, SCENE_IDLE);
 	led_timer_cancel(&s->timer);
 }
@@ -112,7 +114,9 @@ stop_scene(struct scene *s)
 static void
 pause_scene(struct scene *s, struct scene *paused_by)
 {
-	stop_scene_leds(s);
+	if (is_running(s))
+		stop_scene_leds(s);
+
 	s->paused_by = paused_by;
 	set_scene_state(s, SCENE_PAUSED);
 	led_timer_cancel(&s->timer);
