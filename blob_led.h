@@ -10,6 +10,7 @@ struct blob_led {
 	int on;
 	int off;
 	char *path;
+	int scene_led;
 };
 
 #define COLOUR_POLICY_LEN 5
