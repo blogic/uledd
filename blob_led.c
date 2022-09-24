@@ -34,6 +34,7 @@ blob_led_init(struct blob_led **b, const char *path, int brightness, int origina
 	n->blink = blink;
 	n->original = original;
 	n->brightness = brightness;
+	n->scene_led = 0;
 
 	n->path = strdup(path);
 	if (!n->path) {

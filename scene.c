@@ -28,6 +28,7 @@ struct scene {
 	struct led_timer timer;
 	enum scene_state state;
 	struct scene *paused_by;
+	struct led_timer led_timer;
 };
 
 static struct avl_tree scene_tree = AVL_TREE_INIT(scene_tree, avl_strcmp, false, NULL);
@@ -126,11 +127,15 @@ static bool
 stage_scene(struct scene *s)
 {
 	struct scene_led *item;
+	int timeout = 0;
 
 	avl_for_each_element(&s->leds, item, avl) {
 		led_add(item->led);
-		led_run(led_from_path(item->led->path));
+		timeout = led_run(led_from_path(item->led->path));
 	}
+
+	if (timeout > 0)
+		led_timer_set(&s->led_timer, timeout);
 
 	s->paused_by = NULL;
 	set_scene_state(s, SCENE_RUNNING);
@@ -193,6 +198,20 @@ scene_timer_cb(struct led_timer *t)
 	resume_paused_scenes(s);
 }
 
+static void
+scene_led_timer_cb(struct led_timer *t)
+{
+	struct scene *s = container_of(t, struct scene, led_timer);
+	struct scene_led *item;
+	int timeout = 0;
+
+	avl_for_each_element(&s->leds, item, avl)
+		timeout = led_handle_timer(led_from_path(item->led->path));
+
+	if (timeout > 0)
+		led_timer_set(&s->led_timer, timeout);
+}
+
 struct scene*
 scene_add(const char *name, int timeout, int priority)
 {
@@ -209,6 +228,7 @@ scene_add(const char *name, int timeout, int priority)
 	scene->name = strcpy(_name, name);
 	scene->avl.key = scene->name;
 	scene->timer.cb = scene_timer_cb;
+	scene->led_timer.cb = scene_led_timer_cb;
 
 	if (!avl_insert(&scene_tree, &scene->avl)) {
 		DEBUG(2, "add %s\n", scene_str(scene));
@@ -243,6 +263,7 @@ scene_led_add(struct scene *s, struct blob_led *b)
 		return;
 	}
 
+	b->scene_led = 1;
 	n->led = b;
 	n->avl.key = b->path;
 	avl_insert(&s->leds, &n->avl);

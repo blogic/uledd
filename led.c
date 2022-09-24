@@ -102,7 +102,7 @@ led_state_set(struct led *led, enum led_state state)
 	DEBUG(3, "%s to %s\n", led->b->path, led_state_str(state));
 }
 
-static void
+static int
 led_fade_out(struct led *led)
 {
 	int to = led->b->brightness;
@@ -125,10 +125,10 @@ led_fade_out(struct led *led)
 		led_state_set(led, led->b->on ? LED_FADE_IN : LED_SET);
 	}
 
-	led_timer_set(&led->timer, timer_tick_interval);
+	return timer_tick_interval;
 }
 
-static void
+static int
 led_fade_in(struct led *led)
 {
 	int to = led->b->brightness;
@@ -151,40 +151,50 @@ led_fade_in(struct led *led)
 		led_state_set(led, led->b->off ? LED_FADE_OUT : LED_SET);
 	}
 
-	led_timer_set(&led->timer, timer_tick_interval);
+	return timer_tick_interval;
+}
+
+int
+led_handle_timer(struct led *led)
+{
+	int timeout = 0;
+
+	switch (led->state) {
+	case LED_BLINK_OFF:
+		timeout = led->b->on;
+		led->state = LED_BLINK_ON;
+		led_set(led, led->b->brightness);
+		break;
+
+	case LED_BLINK_ON:
+		timeout = led->b->off;
+		led->state = LED_BLINK_OFF;
+		led_set(led, led->b->original);
+		break;
+
+	case LED_FADE_IN:
+		timeout = led_fade_in(led);
+		break;
+
+	case LED_FADE_OUT:
+		timeout = led_fade_out(led);
+		break;
+
+	default:
+		return 0;
+	}
+
+	return timeout;
 }
 
 static void
 led_timer_cb(struct led_timer *t)
 {
 	struct led *led = container_of(t, struct led, timer);
-	int brightness, timeout;
+	int timeout = led_handle_timer(led);
 
-	switch (led->state) {
-	case LED_BLINK_OFF:
-		timeout = led->b->on;
-		brightness = led->b->brightness;
-		led->state = LED_BLINK_ON;
-		break;
-
-	case LED_BLINK_ON:
-		timeout = led->b->off;
-		brightness = led->b->original;
-		led->state = LED_BLINK_OFF;
-		break;
-
-	case LED_FADE_IN:
-		return led_fade_in(led);
-
-	case LED_FADE_OUT:
-		return led_fade_out(led);
-
-	default:
-		return;
-	}
-
-	led_set(led, brightness);
-	led_timer_set(t, timeout);
+	if (timeout > 0)
+		led_timer_set(t, timeout);
 }
 
 static int
@@ -232,18 +242,18 @@ led_add(struct blob_led *b)
 	return led;
 }
 
-void
+int
 led_run(struct led *led)
 {
-	int timeout;
+	int timeout = 0;
 
 	if (!led)
-		return;
+		return 0;
 
 	switch (led->state) {
 	case LED_SET:
 		led_set(led, led->b->brightness);
-		return;
+		return 0;
 
 	case LED_FADE_OUT:
 		timeout = timer_tick_interval;
@@ -261,14 +271,16 @@ led_run(struct led *led)
 		break;
 
 	default:
-		return;
+		return 0;
 	}
 
-	led_timer_set(&led->timer, timeout);
+	if (!led->b->scene_led)
+		led_timer_set(&led->timer, timeout);
 
 	DEBUG(3, "%s delta=%d timeout=%d brightness=%d original=%d blink=%d fade=%d on=%d off=%d\n",
 	      led->b->path, led->delta, timeout, led->b->brightness, led->b->original, led->b->blink,
 	      led->b->fade, led->b->on, led->b->off);
+	return timeout;
 }
 
 struct led *
